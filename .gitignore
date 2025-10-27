@@ -6,6 +6,16 @@ __pycache__/
 # C extensions
 *.so
 
+# Archivos locales que NO se suben
+.env
+config/local_settings.py
+*.local.py
+__pycache__/
+*.pyc
+
+
+
+
 # Distribution / packaging
 .Python
 build/
