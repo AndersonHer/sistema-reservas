@@ -1,20 +1,16 @@
-CREATE DATABASE IF NOT EXISTS sistema_reservas;
+CREATE DATABASE IF NOT EXISTS sistema_reservas CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE sistema_reservas;
 
--- ====================================================
--- 1️ TABLA: usuarios
--- ====================================================
+-- TABLA: usuarios
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     correo VARCHAR(100) UNIQUE NOT NULL,
-    contraseña VARCHAR(255) NOT NULL,
+    contrasena VARCHAR(255) NOT NULL,
     rol ENUM('usuario', 'admin') DEFAULT 'usuario'
 );
 
--- ====================================================
--- 2️ TABLA: recursos
--- ====================================================
+-- TABLA: recursos
 CREATE TABLE recursos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -23,9 +19,7 @@ CREATE TABLE recursos (
     estado ENUM('disponible', 'no disponible') DEFAULT 'disponible'
 );
 
--- ====================================================
--- 3️ TABLA: reservas
--- ====================================================
+-- TABLA: reservas
 CREATE TABLE reservas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     usuario_id INT NOT NULL,
@@ -38,9 +32,7 @@ CREATE TABLE reservas (
     FOREIGN KEY (recurso_id) REFERENCES recursos(id) ON DELETE CASCADE
 );
 
--- ====================================================
--- 4️ TABLA: disponibilidad
--- ====================================================
+-- TABLA: disponibilidad
 CREATE TABLE disponibilidad (
     id INT AUTO_INCREMENT PRIMARY KEY,
     recurso_id INT NOT NULL,
@@ -51,9 +43,7 @@ CREATE TABLE disponibilidad (
     FOREIGN KEY (recurso_id) REFERENCES recursos(id) ON DELETE CASCADE
 );
 
--- ====================================================
--- 5 TABLA: historial_reservas
--- ====================================================
+-- TABLA: historial_reservas
 CREATE TABLE historial_reservas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     reserva_id INT NOT NULL,
@@ -67,3 +57,4 @@ CREATE TABLE historial_reservas (
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
     FOREIGN KEY (recurso_id) REFERENCES recursos(id) ON DELETE CASCADE
 );
+
