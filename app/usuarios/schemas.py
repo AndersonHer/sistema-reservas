@@ -1,23 +1,24 @@
-# app/usuarios/schemas.py
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 
-class UsuarioCrear(BaseModel):
+class UsuarioCreate(BaseModel):
     nombre: str
-    correo: EmailStr
-    contrasena: str
+    email: EmailStr
+    password: str
 
-class UsuarioIniciarSesion(BaseModel):
-    correo: EmailStr
-    contrasena: str
+class UsuarioLogin(BaseModel):
+    email: EmailStr
+    password: str
 
-class UsuarioSalida(BaseModel):
+class UsuarioResponse(BaseModel):
     id: int
     nombre: str
-    correo: EmailStr
+    email: EmailStr
     rol: str
+    activo: bool
 
-    # Compatible con Pydantic v2 (reemplaza orm_mode)
-    model_config = {"from_attributes": True}
+    class Config:
+        orm_mode = True
 
 class Token(BaseModel):
     access_token: str
