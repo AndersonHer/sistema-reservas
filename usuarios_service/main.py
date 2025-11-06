@@ -3,8 +3,13 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import create_engine
 
-from config.settings import settings
-from . import models, schemas, crud, auth
+
+
+from usuarios_service.config.settings import settings
+
+
+from . import crud, models, schemas
+from . import auth
 
 
 # ====================================================

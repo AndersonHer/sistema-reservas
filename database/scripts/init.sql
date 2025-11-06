@@ -5,9 +5,10 @@ USE sistema_reservas;
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    correo VARCHAR(100) UNIQUE NOT NULL,
-    contrasena VARCHAR(255) NOT NULL,
-    rol ENUM('usuario', 'admin') DEFAULT 'usuario'
+    email VARCHAR(150) UNIQUE NOT NULL,
+    hashed_password VARCHAR(255) NOT NULL,
+    rol ENUM('usuario', 'admin') DEFAULT 'usuario',
+    activo BOOLEAN DEFAULT TRUE
 );
 
 -- TABLA: recursos
