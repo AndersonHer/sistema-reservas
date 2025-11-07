@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from models import Recurso
-from schemas import RecursoCreate, RecursoUpdate
+from recursos_service.models import Recurso
+from recursos_service.schemas import RecursoCreate, RecursoUpdate
 
 def get_recursos(db: Session):
     return db.query(Recurso).all()

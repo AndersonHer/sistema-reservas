@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, Enum, Text
-from config.database import Base
-
+from recursos_service.config.database import Base
 import enum
 
 class EstadoRecurso(str, enum.Enum):
