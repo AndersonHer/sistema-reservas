@@ -1,25 +1,16 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, Field
+from datetime import date, time
 from typing import Optional
 
-class UsuarioCreate(BaseModel):
-    nombre: str
-    email: EmailStr
-    password: str
+class DisponibilidadRequest(BaseModel):
+    """ Esquema para la consulta de disponibilidad """
+    recurso_id: int
+    fecha: date
+    hora_inicio: time
+    hora_fin: time
 
-class UsuarioLogin(BaseModel):
-    email: EmailStr
-    password: str
-
-class UsuarioResponse(BaseModel):
-    id: int
-    nombre: str
-    email: EmailStr
-    rol: str
-    activo: bool
-
-    class Config:
-        orm_mode = True
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+class DisponibilidadResponse(BaseModel):
+    """ Respuesta de la consulta de disponibilidad """
+    disponible: bool
+    mensaje: str
+    conflicto_id: Optional[int] = None
