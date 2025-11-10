@@ -1,6 +1,12 @@
 from sqlalchemy.orm import Session
 from .models import Usuario
-from .auth import hash_password
+from passlib.context import CryptContext
+
+# Crear contexto para hashing de contraseñas
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str):
+    return pwd_context.hash(password)
 
 def get_user_by_email(db: Session, email: str):
     return db.query(Usuario).filter(Usuario.email == email).first()
