@@ -12,7 +12,7 @@ class Settings:
         self.DB_HOST = os.getenv('DB_HOST', 'localhost')
         self.DB_NAME = os.getenv('DB_NAME', 'sistema_reservas')
         self.DB_USER = os.getenv('DB_USER', 'root')
-        self.DB_PASSWORD = os.getenv('DB_PASSWORD', 'megadelicias123')  # valor por defecto
+        self.DB_PASSWORD = os.getenv('DB_PASSWORD', 'Anderson1019')  # valor por defecto
 
         # Construir URL de conexión después de cargar variables
         self.DATABASE_URL = os.getenv(
