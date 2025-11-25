@@ -50,3 +50,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=422,
         content={"detail": "Datos inválidos en la solicitud", "errors": exc.errors()},
     )
+
+# Diego lo agrego
+@app.get("/reservas/usuario/{usuario_id}/", response_model=list[schemas.ReservaResponse])
+def obtener_reservas_usuario(usuario_id: int, db: Session = Depends(get_db)):
+    reservas = crud.obtener_reservas_por_usuario(db, usuario_id)
+    return reservas

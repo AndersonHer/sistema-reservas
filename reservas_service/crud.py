@@ -32,3 +32,6 @@ def eliminar_reserva(db: Session, reserva_id: int):
     db.delete(reserva)
     db.commit()
     return reserva
+# diego
+def obtener_reservas_por_usuario(db: Session, usuario_id: int):
+    return db.query(Reserva).filter(Reserva.usuario_id == usuario_id).all()
