@@ -1,0 +1,118 @@
+﻿{% extends 'web/base.html' %}
+
+{% block title %}Nueva Reserva - Sistema de Reservas{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="card-title">Nueva Reserva</h2>
+            <p class="card-subtitle">Selecciona el recurso y fecha para tu reserva</p>
+        </div>
+
+        <form method='post'>
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label">Recurso:</label>
+                <select name='recurso_id' class="form-select" required>
+                    <option value=''>Selecciona un recurso</option>
+                    {% for recurso in recursos %}
+                    <option value='{{ recurso.id }}'>{{ recurso.nombre }} ({{ recurso.tipo }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Fecha:</label>
+                <input type='date' name='fecha' class="form-control" required>
+            </div>
+            
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Hora Inicio:</label>
+                    <input type='time' name='hora_inicio' class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Hora Fin:</label>
+                    <input type='time' name='hora_fin' class="form-control" required>
+                </div>
+            </div>
+            
+            <button type='submit' class='btn btn-success btn-block'>Crear Reserva</button>
+        </form>
+        
+        <div class="alert alert-info mt-3">
+            <span class="me-2">💡</span>
+            Selecciona el recurso, fecha y horario para tu reserva.
+        </div>
+    </div>
+
+    <div class='card'>
+        <div class="card-header">
+            <h3 class="card-title">Recursos Disponibles</h3>
+        </div>
+        
+        {% if recursos %}
+            <div class='grid-auto'>
+                {% for recurso in recursos %}
+                    <div class='card resource-card text-center'>
+                        <div class="mb-2" style="font-size: 2rem;">
+                            {% if recurso.tipo == 'sala' %}🏢
+                            {% elif recurso.tipo == 'equipo' %}💻
+                            {% elif recurso.tipo == 'laboratorio' %}🔬
+                            {% else %}📦{% endif %}
+                        </div>
+                        <strong class="d-block mb-1">{{ recurso.nombre }}</strong>
+                        <small class="text-light d-block mb-2">Tipo: {{ recurso.tipo }}</small>
+                        <span class='badge badge-success'>Disponible</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-warning text-center">
+                <span class="me-2">⚠️</span>
+                No hay recursos disponibles para reservar.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+/* Estilos específicos para nueva reserva */
+.resource-card {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.resource-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--secondary-color);
+}
+
+.grid-2 {
+    gap: 1rem;
+}
+
+/* Mejoras para formularios de fecha/hora */
+.form-control[type="date"],
+.form-control[type="time"] {
+    cursor: pointer;
+}
+
+.form-select {
+    cursor: pointer;
+}
+
+/* Responsive para nueva reserva */
+@media (max-width: 768px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+    
+    .resource-card {
+        padding: 1rem;
+    }
+}
+</style>
+{% endblock %}

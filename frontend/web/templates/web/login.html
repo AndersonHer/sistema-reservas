@@ -1,0 +1,159 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Iniciar Sesión - Sistema de Reservas{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header text-center mb-4">
+            <div class="auth-icon">🔐</div>
+            <h1 class="card-title">Iniciar Sesión</h1>
+            <p class="card-subtitle">Sistema de Reservas Institucionales</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger mb-3">
+            <span class="me-2">⚠️</span>
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="email" class="form-label">Correo Electrónico</label>
+                <input type="email" id="email" name="email" class="form-control" 
+                       placeholder="usuario@institucion.edu" required>
+                <small class="text-light">Usa tu correo institucional</small>
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Contraseña</label>
+                <input type="password" id="password" name="password" class="form-control" 
+                       placeholder="Ingresa tu contraseña" required>
+                <div class="d-flex justify-between align-center mt-2">
+                    <label class="d-flex align-center gap-1">
+                        <input type="checkbox" name="remember">
+                        <span class="text-light">Recordar sesión</span>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-block mb-3">
+                <span class="me-2">→</span>
+                Ingresar al Sistema
+            </button>
+        </form>
+
+        <div class="auth-footer text-center">
+            <a href="{% url 'password_reset_request' %}" class="auth-link">¿Olvidaste tu contraseña?</a>
+            <span class="mx-2 text-light">•</span>
+            <a href="{% url 'registro' %}" class="auth-link">Crear cuenta nueva</a>
+        </div>
+
+        <div class="demo-notice mt-3">
+            <div class="d-flex align-center gap-2">
+                <span>💡</span>
+                <div>
+                    <strong>Modo demostración:</strong> Usa cualquier email y contraseña para probar el sistema
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos específicos para login */
+.auth-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--dark-color));
+}
+
+.auth-card {
+    background: white;
+    padding: 3rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-hover);
+    width: 100%;
+    max-width: 440px;
+}
+
+.auth-header {
+    margin-bottom: 2rem;
+}
+
+.auth-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.auth-form {
+    margin-bottom: 1.5rem;
+}
+
+.auth-footer {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.auth-link {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.auth-link:hover {
+    text-decoration: underline;
+}
+
+.demo-notice {
+    background: rgba(39, 174, 96, 0.1);
+    border: 1px solid rgba(39, 174, 96, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    color: var(--success-color);
+    font-size: 0.9rem;
+}
+
+.demo-notice strong {
+    color: var(--success-color);
+}
+
+.text-light {
+    color: var(--text-light);
+    font-size: 0.875rem;
+}
+
+.mx-2 {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}
+
+.me-2 {
+    margin-right: 0.5rem;
+}
+
+/* Responsive para login */
+@media (max-width: 768px) {
+    .auth-container {
+        padding: 1rem;
+        background: var(--light-color);
+    }
+    
+    .auth-card {
+        padding: 2rem;
+        box-shadow: var(--shadow);
+    }
+    
+    .auth-icon {
+        font-size: 2.5rem;
+    }
+}
+</style>
+{% endblock %}

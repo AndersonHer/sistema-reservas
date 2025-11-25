@@ -1,0 +1,94 @@
+﻿{% extends 'web/base.html' %}
+
+{% block title %}Mis Reservas - Sistema de Reservas{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="d-flex justify-between align-center mb-3">
+            <div>
+                <h2 class="card-title">Mis Reservas</h2>
+                <p class="card-subtitle">Gestiona tus reservas activas</p>
+            </div>
+            <a href="{% url 'nueva_reserva' %}" class="btn btn-success">Nueva Reserva</a>
+        </div>
+        
+        {% if reservas %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Recurso</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reserva in reservas %}
+                        <tr>
+                            <td>#{{ reserva.id }}</td>
+                            <td>
+                                <div class="d-flex align-center gap-2">
+                                    <span class="resource-icon-small">
+                                        {% if reserva.recurso_tipo == 'sala' %}🏢
+                                        {% elif reserva.recurso_tipo == 'equipo' %}💻
+                                        {% elif reserva.recurso_tipo == 'laboratorio' %}🔬
+                                        {% else %}📦{% endif %}
+                                    </span>
+                                    {{ reserva.recurso_nombre }}
+                                </div>
+                            </td>
+                            <td>{{ reserva.fecha }}</td>
+                            <td>
+                                <span class="badge {% if reserva.estado == 'activa' %}badge-success{% else %}badge-danger{% endif %}">
+                                    {{ reserva.estado|title }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center p-4">
+                <div class="mb-3" style="font-size: 4rem;">📋</div>
+                <h3 class="mb-2">No tienes reservas activas</h3>
+                <p class="text-light mb-3">Comienza reservando un recurso para tu próxima actividad</p>
+                <a href="{% url 'nueva_reserva' %}" class="btn btn-success">Hacer mi primera reserva</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+/* Estilos específicos para reservas */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.resource-icon-small {
+    font-size: 1.2rem;
+}
+
+/* Estado vacío mejorado */
+.text-center.p-4 {
+    background: var(--light-color);
+    border-radius: 12px;
+    margin: 2rem 0;
+}
+
+/* Responsive para tabla de reservas */
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .d-flex.justify-between {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}

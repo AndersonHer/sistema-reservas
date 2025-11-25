@@ -1,0 +1,85 @@
+﻿{% extends 'web/base.html' %}
+
+{% block title %}Inicio - Sistema de Reservas{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Hero Section -->
+    <div class="card text-center mb-4">
+        <h1 class="card-title mb-2">Sistema de Reservas de Recursos</h1>
+        <p class="card-subtitle mb-3">Gestiona la reserva de salas, equipos y recursos institucionales</p>
+        
+        {% if not request.session.user %}
+            <a href="{% url 'login' %}" class="btn btn-success" style="font-size: 1.2rem; padding: 1rem 2rem;">
+                Iniciar Sesión para Continuar
+            </a>
+        {% else %}
+            <a href="{% url 'dashboard' %}" class="btn btn-success" style="font-size: 1.2rem; padding: 1rem 2rem;">
+                Ir al Dashboard
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Features Grid -->
+    <div class="grid-3">
+        <div class="card text-center">
+            <div class="mb-2" style="font-size: 3rem;">🏢</div>
+            <h3 class="mb-2">Reserva de Salas</h3>
+            <p class="text-light">Reserva salas de conferencias, reuniones y auditorios para tus actividades.</p>
+        </div>
+        
+        <div class="card text-center">
+            <div class="mb-2" style="font-size: 3rem;">💻</div>
+            <h3 class="mb-2">Equipos Tecnológicos</h3>
+            <p class="text-light">Accede a proyectores, computadoras y equipos especializados.</p>
+        </div>
+        
+        <div class="card text-center">
+            <div class="mb-2" style="font-size: 3rem;">🔬</div>
+            <h3 class="mb-2">Recursos Especializados</h3>
+            <p class="text-light">Utiliza laboratorios y recursos técnicos para tus proyectos.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos específicos para home */
+.text-center h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.text-center p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.grid-3 .card {
+    transition: transform 0.3s ease;
+}
+
+.grid-3 .card:hover {
+    transform: translateY(-5px);
+}
+
+.text-light {
+    color: var(--text-light);
+    line-height: 1.6;
+}
+
+/* Responsive para home */
+@media (max-width: 768px) {
+    .text-center h1 {
+        font-size: 2rem;
+    }
+    
+    .text-center p {
+        font-size: 1.1rem;
+    }
+    
+    .grid-3 .card {
+        padding: 1.5rem;
+    }
+}
+</style>
+{% endblock %}

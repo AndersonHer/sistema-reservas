@@ -1,0 +1,131 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Registro - Sistema de Reservas{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header text-center mb-4">
+            <div class="auth-icon">👤</div>
+            <h1 class="card-title">Crear Cuenta</h1>
+            <p class="card-subtitle">Únete al Sistema de Reservas</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger mb-3">
+            <span class="me-2">⚠️</span>
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="nombre" class="form-label">Nombre Completo</label>
+                <input type="text" id="nombre" name="nombre" class="form-control" 
+                       value="{{ form_data.nombre }}" placeholder="Ej: Juan Pérez" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">Correo Electrónico</label>
+                <input type="email" id="email" name="email" class="form-control" 
+                       value="{{ form_data.email }}" placeholder="usuario@institucion.edu" required>
+                <small class="text-light">Usa tu correo institucional</small>
+            </div>
+
+            <div class="form-group">
+                <label for="rol" class="form-label">Rol</label>
+                <select id="rol" name="rol" class="form-select" required>
+                    <option value="estudiante" {% if form_data.rol == 'estudiante' %}selected{% endif %}>Estudiante</option>
+                    <option value="profesor" {% if form_data.rol == 'profesor' %}selected{% endif %}>Profesor</option>
+                    <option value="administrativo" {% if form_data.rol == 'administrativo' %}selected{% endif %}>Personal Administrativo</option>
+                    <option value="admin" {% if form_data.rol == 'admin' %}selected{% endif %}>Administrador</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Contraseña</label>
+                <input type="password" id="password" name="password" class="form-control" 
+                       placeholder="Mínimo 6 caracteres" required>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password" class="form-label">Confirmar Contraseña</label>
+                <input type="password" id="confirm_password" name="confirm_password" class="form-control" 
+                       placeholder="Repite tu contraseña" required>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-block mb-3">
+                <span class="me-2">📝</span>
+                Crear Cuenta
+            </button>
+        </form>
+
+        <div class="auth-footer text-center">
+            <span class="text-light">¿Ya tienes cuenta?</span>
+            <a href="{% url 'login' %}" class="auth-link">Iniciar Sesión</a>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos específicos para registro */
+.auth-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--dark-color));
+}
+
+.auth-card {
+    background: white;
+    padding: 3rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-hover);
+    width: 100%;
+    max-width: 440px;
+}
+
+.auth-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.auth-footer {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.auth-link {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 0.5rem;
+}
+
+.auth-link:hover {
+    text-decoration: underline;
+}
+
+.text-light {
+    color: var(--text-light);
+    font-size: 0.875rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .auth-container {
+        padding: 1rem;
+        background: var(--light-color);
+    }
+    
+    .auth-card {
+        padding: 2rem;
+        box-shadow: var(--shadow);
+    }
+}
+</style>
+{% endblock %}

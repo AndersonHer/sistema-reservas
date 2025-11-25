@@ -1,0 +1,215 @@
+﻿{% extends 'web/base.html' %}
+
+{% block title %}Dashboard - Sistema de Reservas{% endblock %}
+
+{% block content %}
+<div class="dashboard fade-in">
+    <!-- Header del Dashboard -->
+    <div class="card mb-4">
+        <div class="d-flex justify-between align-center">
+            <div>
+                <h1 class="card-title">Bienvenido, {{ user.nombre }} 👋</h1>
+                <p class="card-subtitle">Gestiona tus reservas y recursos institucionales</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'nueva_reserva' %}" class="btn btn-success">
+                    <span>+</span>
+                    Nueva Reserva
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="grid-3 mb-4">
+        <div class="card text-center">
+            <div class="d-flex align-center gap-2 justify-center mb-2">
+                <span style="font-size: 2rem;">📊</span>
+            </div>
+            <div class="stat-number">{{ total_recursos }}</div>
+            <div class="stat-label">Recursos Totales</div>
+        </div>
+        
+        <div class="card text-center">
+            <div class="d-flex align-center gap-2 justify-center mb-2">
+                <span style="font-size: 2rem;">✅</span>
+            </div>
+            <div class="stat-number">{{ recursos_disponibles }}</div>
+            <div class="stat-label">Disponibles</div>
+        </div>
+        
+        <div class="card text-center">
+            <div class="d-flex align-center gap-2 justify-center mb-2">
+                <span style="font-size: 2rem;">📅</span>
+            </div>
+            <div class="stat-number">{{ total_reservas }}</div>
+            <div class="stat-label">Mis Reservas</div>
+        </div>
+        
+        <div class="card text-center">
+            <div class="d-flex align-center gap-2 justify-center mb-2">
+                <span style="font-size: 2rem;">👥</span>
+            </div>
+            <div class="stat-number">{{ user.rol|title }}</div>
+            <div class="stat-label">Tu Rol</div>
+        </div>
+    </div>
+
+    <!-- Acciones Rápidas -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="card-title">Acciones Rápidas</h2>
+        </div>
+        <div class="grid-3">
+            <a href="{% url 'recursos' %}" class="card action-card text-center">
+                <div class="action-icon mb-2">🔍</div>
+                <h3 class="mb-1">Ver Recursos</h3>
+                <p class="text-light">Explora todos los recursos disponibles</p>
+                <div class="action-arrow mt-2">→</div>
+            </a>
+            
+            <a href="{% url 'nueva_reserva' %}" class="card action-card text-center">
+                <div class="action-icon mb-2">➕</div>
+                <h3 class="mb-1">Nueva Reserva</h3>
+                <p class="text-light">Reservar un recurso o sala</p>
+                <div class="action-arrow mt-2">→</div>
+            </a>
+            
+            <a href="{% url 'reservas' %}" class="card action-card text-center">
+                <div class="action-icon mb-2">📋</div>
+                <h3 class="mb-1">Mis Reservas</h3>
+                <p class="text-light">Gestiona tus reservas activas</p>
+                <div class="action-arrow mt-2">→</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recursos Disponibles -->
+    <div class="card">
+        <div class="card-header d-flex justify-between align-center">
+            <h2 class="card-title">Recursos Disponibles</h2>
+            <a href="{% url 'recursos' %}" class="btn btn-outline btn-sm">Ver todos →</a>
+        </div>
+        
+        <div class="grid-auto">
+            {% for recurso in recursos %}
+            <div class="card resource-card">
+                <div class="d-flex justify-between align-center mb-2">
+                    <div class="resource-icon">
+                        {% if recurso.tipo == 'sala' %}🏢
+                        {% elif recurso.tipo == 'equipo' %}💻
+                        {% elif recurso.tipo == 'laboratorio' %}🔬
+                        {% else %}📦{% endif %}
+                    </div>
+                    <div class="badge {% if recurso.estado == 'disponible' %}badge-success{% else %}badge-danger{% endif %}">
+                        {{ recurso.estado|title }}
+                    </div>
+                </div>
+                
+                <h3 class="mb-1">{{ recurso.nombre }}</h3>
+                <p class="text-light mb-2">{{ recurso.tipo|title }}</p>
+                
+                {% if recurso.estado == 'disponible' %}
+                <a href="{% url 'nueva_reserva' %}?recurso={{ recurso.id }}" class="btn btn-outline btn-sm btn-block">
+                    Reservar
+                </a>
+                {% else %}
+                <button class="btn btn-outline btn-sm btn-block" disabled>
+                    No Disponible
+                </button>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos específicos del dashboard que no están en el CSS global */
+
+.dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.action-card {
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    cursor: pointer;
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--secondary-color);
+    text-decoration: none;
+    color: inherit;
+}
+
+.action-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.action-arrow {
+    color: var(--secondary-color);
+    font-weight: bold;
+    font-size: 1.5rem;
+    transition: transform 0.3s ease;
+}
+
+.action-card:hover .action-arrow {
+    transform: translateX(5px);
+}
+
+.resource-card {
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.resource-card:hover {
+    transform: translateY(-5px);
+}
+
+.resource-icon {
+    font-size: 2.5rem;
+}
+
+.text-light {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+/* Responsive específico para dashboard */
+@media (max-width: 768px) {
+    .stat-number {
+        font-size: 2rem;
+    }
+    
+    .action-icon {
+        font-size: 2.5rem;
+    }
+    
+    .resource-icon {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}
