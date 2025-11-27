@@ -4,102 +4,89 @@
 
 {% block content %}
 <div class="fade-in">
-    <div class="card mb-4">
-        <div class="d-flex justify-between align-center mb-3">
-            <div>
-                <h2 class="card-title">Recursos Disponibles</h2>
-                <p class="card-subtitle">Lista completa de recursos del sistema</p>
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="card-title fw-bold text-primary">Recursos Disponibles</h2>
+                    <p class="text-muted mb-0">Lista completa de recursos del sistema</p>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    {% if user.rol == 'admin' %}
+                        <a href="#" class="btn btn-primary">
+                            <i class="fas fa-plus-circle me-1"></i> Agregar Nuevo Recurso
+                        </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'nueva_reserva' %}" class="btn btn-success">
+                        <i class="fas fa-calendar-plus me-1"></i> Nueva Reserva
+                    </a>
+                </div>
             </div>
-            <a href="{% url 'nueva_reserva' %}" class="btn btn-success">Nueva Reserva</a>
-        </div>
-        
-        {% if recursos %}
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Tipo</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for recurso in recursos %}
-                        <tr>
-                            <td>
-                                <div class="d-flex align-center gap-2">
-                                    <span class="resource-icon-small">
+            
+            {% if recursos %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Tipo</th>
+                                <th>Descripción</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for recurso in recursos %}
+                            <tr>
+                                <td class="fw-bold">
+                                    <span class="me-2 fs-5">
                                         {% if recurso.tipo == 'sala' %}🏢
                                         {% elif recurso.tipo == 'equipo' %}💻
                                         {% elif recurso.tipo == 'laboratorio' %}🔬
                                         {% else %}📦{% endif %}
                                     </span>
                                     {{ recurso.nombre }}
-                                </div>
-                            </td>
-                            <td>{{ recurso.tipo|default:"No especificado"|title }}</td>
-                            <td>
-                                <span class="badge {% if recurso.estado == 'disponible' %}badge-success{% else %}badge-danger{% endif %}">
-                                    {{ recurso.estado|title }}
-                                </span>
-                            </td>
-                            <td>
-                                {% if recurso.estado == 'disponible' %}
-                                    <a href="{% url 'nueva_reserva' %}?recurso={{ recurso.id }}" class="btn btn-outline btn-sm">
-                                        Reservar
-                                    </a>
-                                {% else %}
-                                    <button class="btn btn-outline btn-sm" disabled>
-                                        No Disponible
-                                    </button>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <div class="alert alert-warning text-center">
-                <span class="me-2">⚠️</span>
-                No hay recursos disponibles en el sistema.
-            </div>
-        {% endif %}
+                                </td>
+                                <td><span class="badge bg-secondary">{{ recurso.tipo|title }}</span></td>
+                                <td class="text-muted small">{{ recurso.descripcion|default:"-"|truncatechars:50 }}</td>
+                                <td>
+                                    {% if recurso.estado == 'disponible' %}
+                                        <span class="badge bg-success">Disponible</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">No Disponible</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if recurso.estado == 'disponible' %}
+                                        <a href="{% url 'nueva_reserva' %}?recurso={{ recurso.id }}" class="btn btn-outline-primary btn-sm">
+                                            Reservar
+                                        </a>
+                                    {% else %}
+                                        <button class="btn btn-outline-secondary btn-sm" disabled>
+                                            Ocupado
+                                        </button>
+                                    {% endif %}
+                                    
+                                    {% if user.rol == 'admin' %}
+                                        <button class="btn btn-link text-danger p-0 ms-2" title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-warning text-center">
+                    <span class="me-2">⚠️</span>
+                    No hay recursos disponibles en el sistema.
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
-
-<style>
-/* Estilos específicos para recursos */
-.table-responsive {
-    overflow-x: auto;
-}
-
-.resource-icon-small {
-    font-size: 1.2rem;
-}
-
-/* Mejoras para la tabla */
-.table th {
-    background: var(--primary-color);
-    color: white;
-    font-weight: 600;
-}
-
-.table tbody tr:hover {
-    background: rgba(52, 152, 219, 0.05);
-}
-
-/* Responsive para tabla */
-@media (max-width: 768px) {
-    .table-responsive {
-        font-size: 0.875rem;
-    }
-    
-    .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
-    }
-}
-</style>
 {% endblock %}

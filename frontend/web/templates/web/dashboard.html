@@ -4,7 +4,6 @@
 
 {% block content %}
 <div class="dashboard fade-in">
-    <!-- Header del Dashboard -->
     <div class="card mb-4">
         <div class="d-flex justify-between align-center">
             <div>
@@ -20,7 +19,6 @@
         </div>
     </div>
 
-    <!-- Estadísticas -->
     <div class="grid-3 mb-4">
         <div class="card text-center">
             <div class="d-flex align-center gap-2 justify-center mb-2">
@@ -43,7 +41,13 @@
                 <span style="font-size: 2rem;">📅</span>
             </div>
             <div class="stat-number">{{ total_reservas }}</div>
-            <div class="stat-label">Mis Reservas</div>
+            <div class="stat-label">
+                {% if user.rol == 'admin' %}
+                    Reservas Totales
+                {% else %}
+                    Mis Reservas
+                {% endif %}
+            </div>
         </div>
         
         <div class="card text-center">
@@ -55,7 +59,27 @@
         </div>
     </div>
 
-    <!-- Acciones Rápidas -->
+    {% if user.rol == 'admin' %}
+    <div class="card mb-4" style="border: 2px solid var(--secondary-color);">
+        <div class="card-header" style="background-color: var(--secondary-color); color: white; padding: 1rem; border-radius: 8px 8px 0 0; margin: -2rem -2rem 2rem -2rem;">
+            <h3 class="card-title" style="color: white; margin: 0;">🛠️ Panel de Administración</h3>
+        </div>
+        <div class="card-body">
+            <div class="grid-3">
+                <a href="#" class="btn btn-outline btn-block text-center">
+                    ➕ Agregar Recurso
+                </a>
+                <a href="#" class="btn btn-outline btn-block text-center">
+                    👥 Gestionar Usuarios
+                </a>
+                <a href="#" class="btn btn-outline btn-block text-center">
+                    📊 Ver Reportes
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="card mb-4">
         <div class="card-header">
             <h2 class="card-title">Acciones Rápidas</h2>
@@ -77,14 +101,15 @@
             
             <a href="{% url 'reservas' %}" class="card action-card text-center">
                 <div class="action-icon mb-2">📋</div>
-                <h3 class="mb-1">Mis Reservas</h3>
-                <p class="text-light">Gestiona tus reservas activas</p>
+                <h3 class="mb-1">
+                    {% if user.rol == 'admin' %}Gestionar Reservas{% else %}Mis Reservas{% endif %}
+                </h3>
+                <p class="text-light">Revisa el estado de las reservas</p>
                 <div class="action-arrow mt-2">→</div>
             </a>
         </div>
     </div>
 
-    <!-- Recursos Disponibles -->
     <div class="card">
         <div class="card-header d-flex justify-between align-center">
             <h2 class="card-title">Recursos Disponibles</h2>
@@ -125,8 +150,7 @@
 </div>
 
 <style>
-/* Estilos específicos del dashboard que no están en el CSS global */
-
+/* Estilos específicos del dashboard */
 .dashboard {
     max-width: 1200px;
     margin: 0 auto;
@@ -197,7 +221,7 @@
     font-size: 0.9rem;
 }
 
-/* Responsive específico para dashboard */
+/* Responsive específico */
 @media (max-width: 768px) {
     .stat-number {
         font-size: 2rem;

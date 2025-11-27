@@ -126,13 +126,14 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Configuración de Email (Gmail)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'diegosebastianramirez29@gmail.com'  # Cambiar por tu email
-EMAIL_HOST_PASSWORD = 'LunaGertha.2024_wowdk'  # Password de aplicación de Gmail
-DEFAULT_FROM_EMAIL = 'sistema.reservas@institucion.edu'
+EMAIL_HOST_USER = 'sebasnolasco485@gmail.com'
+EMAIL_HOST_PASSWORD = 'qnio mmrg dosc uabf'  
+
+DEFAULT_FROM_EMAIL = 'sebasnolasco485@gmail.com'
 
 # Configuración adicional
 CRISPY_TEMPLATE_PACK = 'bootstrap4'

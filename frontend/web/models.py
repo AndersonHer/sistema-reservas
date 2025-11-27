@@ -3,7 +3,10 @@
 # Modelo para la tabla 'usuarios' existente
 class Usuario(models.Model):
     ROLES = (
-        ('usuario', 'Usuario'),
+        ('estudiante', 'Estudiante'),
+        ('docente', 'Docente'),
+        ('administrativo', 'Administrativo'),
+        ('invitado', 'Invitado Externo'),  
         ('admin', 'Administrador'),
     )
     
@@ -11,7 +14,10 @@ class Usuario(models.Model):
     nombre = models.CharField(max_length=100)
     email = models.EmailField(max_length=100, unique=True)
     hashed_password = models.CharField(max_length=255)
-    rol = models.CharField(max_length=10, choices=ROLES, default='usuario')
+    
+    # ÚNICA definición correcta de rol (max_length=50)
+    rol = models.CharField(max_length=50, choices=ROLES, default='estudiante')
+    
     activo = models.BooleanField(default=True)
     
     class Meta:
@@ -24,7 +30,7 @@ class Usuario(models.Model):
 # Modelo para tokens de recuperación de contraseña
 class PasswordResetToken(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-    token = models.CharField(max_length=100, unique=True)
+    token = models.CharField(max_length=10) 
     creado_en = models.DateTimeField(auto_now_add=True)
     expira_en = models.DateTimeField()
     usado = models.BooleanField(default=False)
@@ -101,7 +107,7 @@ class UsuarioTemp(models.Model):
     email = models.EmailField(unique=True)
     nombre = models.CharField(max_length=100)
     password = models.CharField(max_length=255)
-    rol = models.CharField(max_length=20, choices=ROLES, default='estudiante')
+    rol = models.CharField(max_length=50, choices=ROLES, default='estudiante') # También ajustado a 50 por seguridad
     fecha_registro = models.DateTimeField(auto_now_add=True)
     activo = models.BooleanField(default=True)
     

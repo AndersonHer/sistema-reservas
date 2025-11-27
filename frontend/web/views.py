@@ -1,5 +1,5 @@
-﻿# views.py - VERSIÓN COMPLETA CON INTEGRACIÓN DE MICROSERVICIOS
-import requests
+﻿import requests
+from concurrent.futures import ThreadPoolExecutor
 from django.shortcuts import render, redirect
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
@@ -9,7 +9,6 @@ import secrets
 import string
 from .models import Usuario, Recurso, Reserva, PasswordResetToken
 
-# Configuración de microservicios
 MICROSERVICES = {
     'usuarios': 'http://localhost:8000',      
     'recursos': 'http://localhost:8001',       
@@ -17,55 +16,58 @@ MICROSERVICES = {
     'disponibilidad': 'http://localhost:8004', 
     'reportes': 'http://localhost:8003'       
 }
+
 class MicroserviceClient:
-    """Cliente para comunicarse con los microservicios"""
-    
+    def __init__(self):
+        self.session = requests.Session()
+
     def obtener_recursos(self):
-        """Obtener recursos del microservicio de recursos"""
         try:
-            response = requests.get(f"{MICROSERVICES['recursos']}/recursos/", timeout=5)
+            response = self.session.get(f"{MICROSERVICES['recursos']}/recursos/", timeout=5)
             if response.status_code == 200:
                 return response.json()
-            else:
-                print(f"Error obteniendo recursos: {response.status_code}")
-                return []
-        except requests.exceptions.RequestException as e:
-            print(f"Error conectando al servicio de recursos: {e}")
+            return []
+        except requests.exceptions.RequestException:
             return []
     
     def crear_reserva(self, reserva_data):
-        """Crear reserva a través del microservicio de reservas"""
         try:
-            response = requests.post(
+            response = self.session.post(
                 f"{MICROSERVICES['reservas']}/reservas/", 
                 json=reserva_data,
                 timeout=5
             )
             if response.status_code == 200:
                 return {'success': True, 'reserva': response.json()}
-            else:
-                return {'success': False, 'error': f'Error del servicio: {response.text}'}
+            return {'success': False, 'error': f'Error del servicio: {response.text}'}
         except requests.exceptions.RequestException as e:
             return {'success': False, 'error': f'Error de conexión: {str(e)}'}
     
     def obtener_reservas_usuario(self, usuario_id):
-        """Obtener reservas del usuario desde el microservicio"""
         try:
-            response = requests.get(
+            response = self.session.get(
                 f"{MICROSERVICES['reservas']}/reservas/usuario/{usuario_id}/",
                 timeout=5
             )
             if response.status_code == 200:
                 return response.json()
-            else:
-                print(f"Error obteniendo reservas: {response.status_code}")
-                return []
-        except requests.exceptions.RequestException as e:
-            print(f"Error conectando al servicio de reservas: {e}")
+            return []
+        except requests.exceptions.RequestException:
+            return []
+
+    def obtener_todas_reservas(self):
+        try:
+            response = self.session.get(
+                f"{MICROSERVICES['reservas']}/reservas/",
+                timeout=5
+            )
+            if response.status_code == 200:
+                return response.json()
+            return []
+        except requests.exceptions.RequestException:
             return []
     
     def verificar_disponibilidad(self, recurso_id, fecha, hora_inicio, hora_fin):
-        """Verificar disponibilidad con el microservicio correspondiente"""
         try:
             params = {
                 'recurso_id': recurso_id,
@@ -73,181 +75,135 @@ class MicroserviceClient:
                 'hora_inicio': hora_inicio,
                 'hora_fin': hora_fin
             }
-            response = requests.get(
+            response = self.session.get(
                 f"{MICROSERVICES['disponibilidad']}/disponibilidad/check/",
                 params=params,
                 timeout=5
             )
             if response.status_code == 200:
                 return response.json()
-            else:
-                return {'disponible': False, 'error': 'Error verificando disponibilidad'}
+            return {'disponible': False, 'error': 'Error verificando disponibilidad'}
         except requests.exceptions.RequestException as e:
             return {'disponible': False, 'error': f'Error de conexión: {str(e)}'}
     
     def login_usuario(self, email, password):
-        """Login a través del microservicio de usuarios"""
         try:
-            response = requests.post(
+            response = self.session.post(
                 f"{MICROSERVICES['usuarios']}/usuarios/login",
                 json={'email': email, 'password': password},
                 timeout=5
             )
             if response.status_code == 200:
                 return {'success': True, 'usuario': response.json()}
-            else:
-                return {'success': False, 'error': 'Credenciales incorrectas'}
+            return {'success': False, 'error': 'Credenciales incorrectas'}
         except requests.exceptions.RequestException as e:
             return {'success': False, 'error': f'Error de conexión: {str(e)}'}
     
     def registrar_usuario(self, datos_usuario):
-        """Registrar usuario a través del microservicio"""
         try:
-            response = requests.post(
+            response = self.session.post(
                 f"{MICROSERVICES['usuarios']}/usuarios/registro",
                 json=datos_usuario,
                 timeout=5
             )
             if response.status_code == 200:
                 return {'success': True, 'usuario': response.json()}
-            else:
-                return {'success': False, 'error': response.json().get('detail', 'Error en registro')}
+            return {'success': False, 'error': response.json().get('detail', 'Error en registro')}
         except requests.exceptions.RequestException as e:
             return {'success': False, 'error': f'Error de conexión: {str(e)}'}
 
 def home(request):
-    """Página de inicio - redirige al login o dashboard según sesión"""
-    if request.session.get('user'):
-        return redirect('dashboard')
-    return redirect('login')
+    """Página principal con Galería y Productos"""
+    # Ya NO redirigimos automáticamente para que todos vean la galería
+    
+    ms_client = MicroserviceClient()
+    
+    # Obtenemos recursos para mostrarlos en la sección "Nuestros Productos"
+    recursos_data = ms_client.obtener_recursos()
+    
+    # Fallback si no hay conexión
+    if not recursos_data:
+        recursos = Recurso.objects.all()
+        recursos_data = [{'id': r.id, 'nombre': r.nombre, 'tipo': r.tipo, 'descripcion': r.descripcion} for r in recursos]
+    
+    return render(request, 'web/home.html', {
+        'recursos': recursos_data,
+        'user': request.session.get('user')
+    })
 
 def password_reset_request(request):
-    """Vista para solicitar recuperación de contraseña"""
     if request.method == 'POST':
         email = request.POST.get('email')
-        
         try:
             usuario = Usuario.objects.get(email=email, activo=True)
+            token = ''.join(secrets.choice(string.digits) for _ in range(6))
+            expira_en = timezone.now() + timezone.timedelta(minutes=15)
             
-            # Generar token único
-            token = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(50))
-            
-            # Crear expiración (1 hora)
-            expira_en = timezone.now() + timezone.timedelta(hours=1)
-            
-            # Guardar token en la base de datos
-            reset_token = PasswordResetToken.objects.create(
+            PasswordResetToken.objects.create(
                 usuario=usuario,
                 token=token,
                 expira_en=expira_en
             )
             
-            # Enviar email
-            reset_url = f"http://127.0.0.1:8000/password-reset-confirm/{token}/"
+            subject = 'Código de Recuperación - Sistema de Reservas'
+            message = f'''Hola {usuario.nombre},
             
-            subject = 'Recuperación de Contraseña - Sistema de Reservas'
-            message = f'''
-            Hola {usuario.nombre},
+            Tu código de verificación es: {token}
             
-            Has solicitado recuperar tu contraseña para el Sistema de Reservas.
-            
-            Para restablecer tu contraseña, haz clic en el siguiente enlace:
-            {reset_url}
-            
-            Este enlace expirará en 1 hora.
-            
-            Si no solicitaste este cambio, ignora este mensaje.
-            
-            Saludos,
-            Equipo del Sistema de Reservas
+            Úsalo para restablecer tu contraseña. Este código expira en 15 minutos.
             '''
-            send_mail(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                [usuario.email],
-                fail_silently=False,
-            )
             
-            print(f"URL de recuperación para {usuario.email}: {reset_url}")
-            
-            return render(request, 'web/password_reset_sent.html', {
-                'email': usuario.email
-            })
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [usuario.email], fail_silently=False)
+            request.session['reset_email'] = usuario.email
+            return redirect('password_reset_confirm')
             
         except Usuario.DoesNotExist:
-            # Por seguridad, no revelar si el email existe o no
-            return render(request, 'web/password_reset_sent.html', {
-                'email': email
-            })
+            request.session['reset_email'] = email
+            return redirect('password_reset_confirm')
     
     return render(request, 'web/password_reset_request.html')
 
-def password_reset_confirm(request, token):
-    """Vista para confirmar recuperación con token"""
-    try:
-        reset_token = PasswordResetToken.objects.get(token=token)
+def password_reset_confirm(request, token=None):
+    email = request.session.get('reset_email')
+    
+    if not email:
+        return redirect('password_reset_request')
         
-        if not reset_token.es_valido():
-            return render(request, 'web/password_reset_invalid.html')
+    if request.method == 'POST':
+        codigo_input = request.POST.get('token')
+        password = request.POST.get('password')
+        confirm = request.POST.get('confirm_password')
         
-        if request.method == 'POST':
-            password = request.POST.get('password')
-            confirm_password = request.POST.get('confirm_password')
+        if password != confirm:
+            return render(request, 'web/password_reset_confirm.html', {'error': 'Las contraseñas no coinciden', 'email': email})
+        
+        try:
+            usuario = Usuario.objects.get(email=email, activo=True)
+            token_valido = PasswordResetToken.objects.filter(
+                usuario=usuario,
+                token=codigo_input,
+                usado=False,
+                expira_en__gt=timezone.now()
+            ).last()
             
-            if password != confirm_password:
-                return render(request, 'web/password_reset_confirm.html', {
-                    'token': token,
-                    'error': 'Las contraseñas no coinciden'
-                })
+            if not token_valido:
+                return render(request, 'web/password_reset_confirm.html', {'error': 'Código inválido o expirado', 'email': email})
             
-            if len(password) < 6:
-                return render(request, 'web/password_reset_confirm.html', {
-                    'token': token,
-                    'error': 'La contraseña debe tener al menos 6 caracteres'
-                })
-            
-            # Actualizar contraseña
-            usuario = reset_token.usuario
             usuario.hashed_password = make_password(password)
             usuario.save()
             
-            # Marcar token como usado
-            reset_token.usado = True
-            reset_token.save()
+            token_valido.usado = True
+            token_valido.save()
             
-            subject = 'Contraseña Actualizada - Sistema de Reservas'
-            message = f'''
-            Hola {usuario.nombre},
-            
-            Tu contraseña ha sido actualizada exitosamente.
-            
-            Si no realizaste este cambio, por favor contacta al administrador inmediatamente.
-            
-            Saludos,
-            Equipo del Sistema de Reservas
-            '''
-            
-            send_mail(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                [usuario.email],
-                fail_silently=False,
-            )
-            
+            del request.session['reset_email']
             return render(request, 'web/password_reset_complete.html')
-        
-        return render(request, 'web/password_reset_confirm.html', {
-            'token': token
-        })
-        
-    except PasswordResetToken.DoesNotExist:
-        return render(request, 'web/password_reset_invalid.html')
+            
+        except Usuario.DoesNotExist:
+            return render(request, 'web/password_reset_confirm.html', {'error': 'Usuario no encontrado', 'email': email})
+            
+    return render(request, 'web/password_reset_confirm.html', {'email': email})
 
 def login_view(request):
-    """Vista para login de usuarios"""
-    # Si ya está logueado, redirigir al dashboard
     if request.session.get('user'):
         return redirect('dashboard')
     
@@ -257,19 +213,20 @@ def login_view(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
         
-        # TEMPORAL: Para probar, permitir login con cualquier contraseña para usuarios existentes
         try:
             usuario = Usuario.objects.get(email=email, activo=True)
-            # Login exitoso (sin verificar contraseña por ahora - TEMPORAL)
-            request.session['user'] = {
-                'id': usuario.id,
-                'nombre': usuario.nombre,
-                'email': usuario.email,
-                'rol': usuario.rol
-            }
-            return redirect('dashboard')
+            if check_password(password, usuario.hashed_password):
+                request.session['user'] = {
+                    'id': usuario.id,
+                    'nombre': usuario.nombre,
+                    'email': usuario.email,
+                    'rol': usuario.rol
+                }
+                return redirect('dashboard')
+            else:
+                return render(request, 'web/login.html', {'error': 'Credenciales incorrectas'})
+                
         except Usuario.DoesNotExist:
-            # Si no existe, intentar con microservicio
             resultado = ms_client.login_usuario(email, password)
             if resultado['success']:
                 usuario = resultado['usuario']
@@ -281,15 +238,11 @@ def login_view(request):
                 }
                 return redirect('dashboard')
             else:
-                return render(request, 'web/login.html', {
-                    'error': resultado['error']
-                })
+                return render(request, 'web/login.html', {'error': resultado.get('error', 'Credenciales incorrectas')})
     
     return render(request, 'web/login.html')
 
 def registro_view(request):
-    """Vista para registro de nuevos usuarios"""
-    # Si ya está logueado, redirigir al dashboard
     if request.session.get('user'):
         return redirect('dashboard')
     
@@ -299,31 +252,15 @@ def registro_view(request):
         nombre = request.POST.get('nombre')
         email = request.POST.get('email')
         password = request.POST.get('password')
-        confirm_password = request.POST.get('confirm_password')
+        confirm = request.POST.get('confirm_password')
         rol = request.POST.get('rol', 'estudiante')
         
-        # Validaciones
-        if password != confirm_password:
-            return render(request, 'web/registro.html', {
-                'error': 'Las contraseñas no coinciden',
-                'form_data': request.POST
-            })
+        if password != confirm:
+            return render(request, 'web/registro.html', {'error': 'Contraseñas no coinciden', 'form_data': request.POST})
         
-        if len(password) < 6:
-            return render(request, 'web/registro.html', {
-                'error': 'La contraseña debe tener al menos 6 caracteres',
-                'form_data': request.POST
-            })
-        
-        # Registrar en microservicio
-        resultado = ms_client.registrar_usuario({
-            'nombre': nombre,
-            'email': email,
-            'password': password
-        })
+        resultado = ms_client.registrar_usuario({'nombre': nombre, 'email': email, 'password': password})
         
         if resultado['success']:
-            # Guardar en sesión y redirigir
             usuario = resultado['usuario']
             request.session['user'] = {
                 'id': usuario['id'],
@@ -333,21 +270,11 @@ def registro_view(request):
             }
             return redirect('dashboard')
         else:
-            # Fallback: registrar en base de datos local
             try:
                 if Usuario.objects.filter(email=email).exists():
-                    return render(request, 'web/registro.html', {
-                        'error': 'Este email ya está registrado',
-                        'form_data': request.POST
-                    })
+                    return render(request, 'web/registro.html', {'error': 'Email ya registrado', 'form_data': request.POST})
                 
-                usuario = Usuario(
-                    nombre=nombre,
-                    email=email,
-                    hashed_password=make_password(password),
-                    rol=rol,
-                    activo=True
-                )
+                usuario = Usuario(nombre=nombre, email=email, hashed_password=make_password(password), rol=rol, activo=True)
                 usuario.save()
                 
                 request.session['user'] = {
@@ -357,151 +284,123 @@ def registro_view(request):
                     'rol': usuario.rol
                 }
                 return redirect('dashboard')
-                
             except Exception as e:
-                return render(request, 'web/registro.html', {
-                    'error': f'Error al crear usuario: {str(e)}',
-                    'form_data': request.POST
-                })
+                return render(request, 'web/registro.html', {'error': f'Error: {str(e)}', 'form_data': request.POST})
     
     return render(request, 'web/registro.html')
 
 def dashboard(request):
-    """Vista principal del dashboard"""
     user = request.session.get('user')
     if not user:
         return redirect('login')
     
-    # Usar microservicio para obtener recursos
     ms_client = MicroserviceClient()
-    recursos_data = ms_client.obtener_recursos()
+    recursos_data = []
+    reservas_data = []
     
-    # Obtener reservas del usuario actual usando microservicio
-    reservas_data = ms_client.obtener_reservas_usuario(user['id'])
-    
-    # Si el microservicio falla, usar base de datos local como fallback
+    try:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_recursos = executor.submit(ms_client.obtener_recursos)
+            
+            if user['rol'] == 'admin':
+                future_reservas = executor.submit(ms_client.obtener_todas_reservas)
+            else:
+                future_reservas = executor.submit(ms_client.obtener_reservas_usuario, user['id'])
+            
+            recursos_data = future_recursos.result()
+            reservas_data = future_reservas.result()
+    except Exception:
+        pass
+
     if not recursos_data:
         recursos = Recurso.objects.all()
-        recursos_data = [
-            {
-                'id': r.id,
-                'nombre': r.nombre,
-                'tipo': r.tipo,
-                'descripcion': r.descripcion,
-                'estado': r.estado
-            }
-            for r in recursos
-        ]
+        recursos_data = [{'id': r.id, 'nombre': r.nombre, 'tipo': r.tipo, 'estado': r.estado} for r in recursos]
     
     if not reservas_data:
-        reservas_usuario = Reserva.objects.filter(usuario_id=user['id'])
-        reservas_data = []
-        for reserva in reservas_usuario:
-            try:
-                recurso = Recurso.objects.get(id=reserva.recurso_id)
-                reservas_data.append({
-                    'id': reserva.id,
-                    'recurso_nombre': recurso.nombre,
-                    'recurso_tipo': recurso.tipo,
-                    'fecha': reserva.fecha,
-                    'hora_inicio': reserva.hora_inicio,
-                    'hora_fin': reserva.hora_fin,
-                    'estado': reserva.estado
-                })
-            except Recurso.DoesNotExist:
-                reservas_data.append({
-                    'id': reserva.id,
-                    'recurso_nombre': 'Recurso no encontrado',
-                    'recurso_tipo': 'desconocido',
-                    'fecha': reserva.fecha,
-                    'hora_inicio': reserva.hora_inicio,
-                    'hora_fin': reserva.hora_fin,
-                    'estado': reserva.estado
-                })
+        if user['rol'] == 'admin':
+            reservas_local = Reserva.objects.all()
+        else:
+            reservas_local = Reserva.objects.filter(usuario_id=user['id'])
+        reservas_data = [{'id': r.id, 'recurso_id': r.recurso_id, 'fecha': r.fecha, 'hora_inicio': r.hora_inicio, 'estado': r.estado} for r in reservas_local]
+
+    recursos_map = {r['id']: r for r in recursos_data}
+    reservas_enriquecidas = []
+
+    for reserva in reservas_data:
+        r_dict = reserva if isinstance(reserva, dict) else {
+            'id': reserva.id, 
+            'recurso_id': reserva.recurso_id,
+            'fecha': reserva.fecha,
+            'hora_inicio': reserva.hora_inicio,
+            'hora_fin': reserva.hora_fin,
+            'estado': reserva.estado
+        }
+        
+        recurso = recursos_map.get(r_dict.get('recurso_id'))
+        
+        if recurso:
+            r_dict['recurso_nombre'] = recurso['nombre']
+            r_dict['recurso_tipo'] = recurso['tipo']
+        else:
+            r_dict['recurso_nombre'] = 'Recurso no encontrado'
+            r_dict['recurso_tipo'] = 'desconocido'
+            
+        reservas_enriquecidas.append(r_dict)
     
     context = {
         'user': user,
         'recursos': recursos_data,
-        'reservas': reservas_data,
+        'reservas': reservas_enriquecidas,
         'total_recursos': len(recursos_data),
-        'total_reservas': len(reservas_data),
+        'total_reservas': len(reservas_enriquecidas),
         'recursos_disponibles': len([r for r in recursos_data if r.get('estado') == 'disponible'])
     }
     return render(request, 'web/dashboard.html', context)
 
 def recursos_view(request):
-    """Vista para listar todos los recursos"""
     user = request.session.get('user')
     if not user:
         return redirect('login')
     
-    # Usar microservicio para obtener recursos
     ms_client = MicroserviceClient()
     recursos_data = ms_client.obtener_recursos()
     
-    # Fallback a base de datos local si el microservicio falla
     if not recursos_data:
         recursos = Recurso.objects.all()
-        recursos_data = [
-            {
-                'id': r.id,
-                'nombre': r.nombre,
-                'tipo': r.tipo,
-                'descripcion': r.descripcion,
-                'estado': r.estado
-            }
-            for r in recursos
-        ]
+        recursos_data = [{'id': r.id, 'nombre': r.nombre, 'tipo': r.tipo, 'estado': r.estado} for r in recursos]
     
-    return render(request, 'web/recursos.html', {
-        'user': user,
-        'recursos': recursos_data
-    })
+    return render(request, 'web/recursos.html', {'user': user, 'recursos': recursos_data})
 
 def reservas_view(request):
-    """Vista para listar reservas del usuario"""
     user = request.session.get('user')
     if not user:
         return redirect('login')
     
-    # Obtener reservas del usuario actual usando microservicio
     ms_client = MicroserviceClient()
-    reservas_data = ms_client.obtener_reservas_usuario(user['id'])
     
-    # Fallback a base de datos local si el microservicio falla
-    if not reservas_data:
-        reservas = Reserva.objects.filter(usuario_id=user['id'])
-        reservas_data = []
-        for reserva in reservas:
-            try:
-                recurso = Recurso.objects.get(id=reserva.recurso_id)
-                reservas_data.append({
-                    'id': reserva.id,
-                    'recurso_nombre': recurso.nombre,
-                    'recurso_tipo': recurso.tipo,
-                    'fecha': reserva.fecha,
-                    'hora_inicio': reserva.hora_inicio,
-                    'hora_fin': reserva.hora_fin,
-                    'estado': reserva.estado
-                })
-            except Recurso.DoesNotExist:
-                reservas_data.append({
-                    'id': reserva.id,
-                    'recurso_nombre': 'Recurso no encontrado',
-                    'recurso_tipo': 'desconocido',
-                    'fecha': reserva.fecha,
-                    'hora_inicio': reserva.hora_inicio,
-                    'hora_fin': reserva.hora_fin,
-                    'estado': reserva.estado
-                })
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        future_recursos = executor.submit(ms_client.obtener_recursos)
+        future_reservas = executor.submit(ms_client.obtener_reservas_usuario, user['id'])
+        recursos_data = future_recursos.result() or []
+        reservas_data = future_reservas.result() or []
+        
+    recursos_map = {r['id']: r for r in recursos_data}
+    reservas_enriquecidas = []
     
-    return render(request, 'web/reservas.html', {
-        'user': user,
-        'reservas': reservas_data
-    })
+    for reserva in reservas_data:
+        r_dict = reserva.copy() if isinstance(reserva, dict) else reserva.__dict__
+        recurso = recursos_map.get(r_dict.get('recurso_id'))
+        if recurso:
+            r_dict['recurso_nombre'] = recurso['nombre']
+            r_dict['recurso_tipo'] = recurso['tipo']
+        else:
+            r_dict['recurso_nombre'] = 'Desconocido'
+            r_dict['recurso_tipo'] = '-'
+        reservas_enriquecidas.append(r_dict)
+
+    return render(request, 'web/reservas.html', {'user': user, 'reservas': reservas_enriquecidas})
 
 def nueva_reserva_view(request):
-    """Vista para crear nueva reserva"""
     user = request.session.get('user')
     if not user:
         return redirect('login')
@@ -509,42 +408,21 @@ def nueva_reserva_view(request):
     ms_client = MicroserviceClient()
     
     if request.method == 'POST':
-        # Procesar nueva reserva
         recurso_id = request.POST.get('recurso_id')
         fecha = request.POST.get('fecha')
         hora_inicio = request.POST.get('hora_inicio')
         hora_fin = request.POST.get('hora_fin')
         
-        # Verificar disponibilidad primero
-        disponibilidad = ms_client.verificar_disponibilidad(
-            recurso_id, fecha, hora_inicio, hora_fin
-        )
+        disponibilidad = ms_client.verificar_disponibilidad(recurso_id, fecha, hora_inicio, hora_fin)
         
         if not disponibilidad.get('disponible', False):
-            error_msg = disponibilidad.get('error', 'El recurso no está disponible en ese horario')
-            
-            # Obtener recursos para mostrar en el template
             recursos_data = ms_client.obtener_recursos()
-            if not recursos_data:
-                recursos = Recurso.objects.filter(estado='disponible')
-                recursos_data = [
-                    {
-                        'id': r.id,
-                        'nombre': r.nombre,
-                        'tipo': r.tipo,
-                        'descripcion': r.descripcion,
-                        'estado': r.estado
-                    }
-                    for r in recursos
-                ]
-            
             return render(request, 'web/nueva_reserva.html', {
-                'user': user,
-                'recursos': recursos_data,
-                'error': error_msg
+                'user': user, 
+                'recursos': recursos_data, 
+                'error': disponibilidad.get('error', 'No disponible')
             })
         
-        # Crear reserva
         reserva_data = {
             'usuario_id': user['id'],
             'recurso_id': int(recurso_id),
@@ -559,50 +437,16 @@ def nueva_reserva_view(request):
         if resultado['success']:
             return redirect('reservas')
         else:
-            # Obtener recursos para mostrar en el template
             recursos_data = ms_client.obtener_recursos()
-            if not recursos_data:
-                recursos = Recurso.objects.filter(estado='disponible')
-                recursos_data = [
-                    {
-                        'id': r.id,
-                        'nombre': r.nombre,
-                        'tipo': r.tipo,
-                        'descripcion': r.descripcion,
-                        'estado': r.estado
-                    }
-                    for r in recursos
-                ]
-            
             return render(request, 'web/nueva_reserva.html', {
-                'user': user,
-                'recursos': recursos_data,
+                'user': user, 
+                'recursos': recursos_data, 
                 'error': resultado['error']
             })
     
-    # GET request - mostrar formulario
     recursos_data = ms_client.obtener_recursos()
-    
-    # Fallback a base de datos local si el microservicio falla
-    if not recursos_data:
-        recursos = Recurso.objects.filter(estado='disponible')
-        recursos_data = [
-            {
-                'id': r.id,
-                'nombre': r.nombre,
-                'tipo': r.tipo,
-                'descripcion': r.descripcion,
-                'estado': r.estado
-            }
-            for r in recursos
-        ]
-    
-    return render(request, 'web/nueva_reserva.html', {
-        'user': user,
-        'recursos': recursos_data
-    })
+    return render(request, 'web/nueva_reserva.html', {'user': user, 'recursos': recursos_data})
 
 def logout_view(request):
-    """Vista para cerrar sesión"""
     request.session.flush()
     return redirect('home')

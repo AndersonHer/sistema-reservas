@@ -10,5 +10,5 @@ class Usuario(Base):
     nombre = Column(String(100), nullable=False)
     email = Column(String(150), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
-    rol = Column(String(50), default="usuario")  # usuario o admin
+    rol = Column(String(50), default="estudiante")  
     activo = Column(Boolean, default=True)
