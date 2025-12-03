@@ -78,7 +78,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'sistema_reservas',
         'USER': 'root',           
-        'PASSWORD': 'Ujcv2025.16',   
+        'PASSWORD': 'megadelicias123',   
         'HOST': 'localhost',
         'PORT': '3306',
     }

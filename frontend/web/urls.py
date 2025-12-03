@@ -9,6 +9,12 @@ urlpatterns = [
     path('recursos/', views.recursos_view, name='recursos'),
     path('reservas/', views.reservas_view, name='reservas'),
     path('reservas/nueva/', views.nueva_reserva_view, name='nueva_reserva'),
+    
+   
+    path('reservas/cancelar/<int:reserva_id>/', views.cancelar_reserva, name='cancelar_reserva'),
+    path('reservas/posponer/<int:reserva_id>/', views.posponer_reserva, name='posponer_reserva'),
+    
+
     path('logout/', views.logout_view, name='logout'),
     
     path('password-reset/', views.password_reset_request, name='password_reset_request'),

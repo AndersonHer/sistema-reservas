@@ -39,10 +39,40 @@ class MicroserviceClient:
             )
             if response.status_code == 200:
                 return {'success': True, 'reserva': response.json()}
-            return {'success': False, 'error': f'Error del servicio: {response.text}'}
+            # Intentar leer el error del backend
+            try:
+                error_msg = response.json().get('detail', 'Error desconocido')
+            except:
+                error_msg = response.text
+            return {'success': False, 'error': f'Error: {error_msg}'}
         except requests.exceptions.RequestException as e:
             return {'success': False, 'error': f'Error de conexión: {str(e)}'}
     
+    # --- NUEVOS MÉTODOS PARA GESTIÓN DE RESERVAS ---
+    def cancelar_reserva(self, reserva_id):
+        """Elimina una reserva (DELETE)"""
+        try:
+            response = self.session.delete(
+                f"{MICROSERVICES['reservas']}/reservas/{reserva_id}",
+                timeout=5
+            )
+            return response.status_code == 200
+        except requests.exceptions.RequestException:
+            return False
+
+    def actualizar_reserva(self, reserva_id, datos):
+        """Actualiza fecha/hora de una reserva (PUT)"""
+        try:
+            response = self.session.put(
+                f"{MICROSERVICES['reservas']}/reservas/{reserva_id}",
+                json=datos,
+                timeout=5
+            )
+            return response.status_code == 200
+        except requests.exceptions.RequestException:
+            return False
+    # -----------------------------------------------
+
     def obtener_reservas_usuario(self, usuario_id):
         try:
             response = self.session.get(
@@ -108,20 +138,21 @@ class MicroserviceClient:
             )
             if response.status_code == 200:
                 return {'success': True, 'usuario': response.json()}
-            return {'success': False, 'error': response.json().get('detail', 'Error en registro')}
+            # Capturar detalle del error (ej. validación fallida)
+            try:
+                detail = response.json().get('detail')
+                msg = str(detail) if detail else 'Error en el registro'
+            except:
+                msg = "Error desconocido en el servidor"
+            return {'success': False, 'error': msg}
         except requests.exceptions.RequestException as e:
             return {'success': False, 'error': f'Error de conexión: {str(e)}'}
 
 def home(request):
     """Página principal con Galería y Productos"""
-    # Ya NO redirigimos automáticamente para que todos vean la galería
-    
     ms_client = MicroserviceClient()
-    
-    # Obtenemos recursos para mostrarlos en la sección "Nuestros Productos"
     recursos_data = ms_client.obtener_recursos()
     
-    # Fallback si no hay conexión
     if not recursos_data:
         recursos = Recurso.objects.all()
         recursos_data = [{'id': r.id, 'nombre': r.nombre, 'tipo': r.tipo, 'descripcion': r.descripcion} for r in recursos]
@@ -251,6 +282,7 @@ def registro_view(request):
     if request.method == 'POST':
         nombre = request.POST.get('nombre')
         email = request.POST.get('email')
+        telefono = request.POST.get('telefono') # <-- CAPTURAMOS EL TELÉFONO
         password = request.POST.get('password')
         confirm = request.POST.get('confirm_password')
         rol = request.POST.get('rol', 'estudiante')
@@ -258,7 +290,15 @@ def registro_view(request):
         if password != confirm:
             return render(request, 'web/registro.html', {'error': 'Contraseñas no coinciden', 'form_data': request.POST})
         
-        resultado = ms_client.registrar_usuario({'nombre': nombre, 'email': email, 'password': password})
+        # Enviamos datos al microservicio
+        datos_usuario = {
+            'nombre': nombre,
+            'email': email,
+            'telefono': telefono,
+            'password': password
+        }
+        
+        resultado = ms_client.registrar_usuario(datos_usuario)
         
         if resultado['success']:
             usuario = resultado['usuario']
@@ -270,22 +310,7 @@ def registro_view(request):
             }
             return redirect('dashboard')
         else:
-            try:
-                if Usuario.objects.filter(email=email).exists():
-                    return render(request, 'web/registro.html', {'error': 'Email ya registrado', 'form_data': request.POST})
-                
-                usuario = Usuario(nombre=nombre, email=email, hashed_password=make_password(password), rol=rol, activo=True)
-                usuario.save()
-                
-                request.session['user'] = {
-                    'id': usuario.id,
-                    'nombre': usuario.nombre,
-                    'email': usuario.email,
-                    'rol': usuario.rol
-                }
-                return redirect('dashboard')
-            except Exception as e:
-                return render(request, 'web/registro.html', {'error': f'Error: {str(e)}', 'form_data': request.POST})
+            return render(request, 'web/registro.html', {'error': resultado['error'], 'form_data': request.POST})
     
     return render(request, 'web/registro.html')
 
@@ -420,7 +445,7 @@ def nueva_reserva_view(request):
             return render(request, 'web/nueva_reserva.html', {
                 'user': user, 
                 'recursos': recursos_data, 
-                'error': disponibilidad.get('error', 'No disponible')
+                'error': disponibilidad.get('mensaje', 'Horario no disponible')
             })
         
         reserva_data = {
@@ -450,3 +475,40 @@ def nueva_reserva_view(request):
 def logout_view(request):
     request.session.flush()
     return redirect('home')
+
+# ================= NUEVAS VISTAS (ACCIONES) =================
+
+def cancelar_reserva(request, reserva_id):
+    """Acción para cancelar una reserva"""
+    if not request.session.get('user'):
+        return redirect('login')
+        
+    ms_client = MicroserviceClient()
+    ms_client.cancelar_reserva(reserva_id)
+    # Redirige de vuelta a la lista de reservas
+    return redirect('reservas')
+
+def posponer_reserva(request, reserva_id):
+    """Acción para posponer (editar) una reserva"""
+    user = request.session.get('user')
+    if not user:
+        return redirect('login')
+        
+    if request.method == 'POST':
+        fecha = request.POST.get('fecha')
+        hora_inicio = request.POST.get('hora_inicio')
+        hora_fin = request.POST.get('hora_fin')
+        
+        ms_client = MicroserviceClient()
+        
+        datos_update = {
+            "fecha": fecha,
+            "hora_inicio": hora_inicio,
+            "hora_fin": hora_fin
+        }
+        
+        # Intentamos actualizar. Si el backend valida conflicto, lanzará error.
+        # Aquí simplificamos redirigiendo siempre, pero podrías manejar el error.
+        ms_client.actualizar_reserva(reserva_id, datos_update)
+            
+    return redirect('reservas')

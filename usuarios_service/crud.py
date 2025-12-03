@@ -2,7 +2,6 @@ from sqlalchemy.orm import Session
 from .models import Usuario
 from passlib.context import CryptContext
 
-# Crear contexto para hashing de contraseñas
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str):
@@ -18,6 +17,7 @@ def create_user(db: Session, user_data):
     nuevo_usuario = Usuario(
         nombre=user_data.nombre,
         email=user_data.email,
+        telefono=user_data.telefono, # <-- Aquí agregamos el teléfono
         hashed_password=hash_password(user_data.password),
         rol="usuario",
         activo=True

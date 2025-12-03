@@ -1,61 +1,12 @@
-CREATE DATABASE IF NOT EXISTS sistema_reservas CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE sistema_reservas;
 
--- TABLA: usuarios
-CREATE TABLE usuarios (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    email VARCHAR(150) UNIQUE NOT NULL,
-    hashed_password VARCHAR(255) NOT NULL,
-    rol ENUM('usuario', 'admin') DEFAULT 'usuario',
-    activo BOOLEAN DEFAULT TRUE
-);
+-- 1. Agregar campo teléfono a la tabla de usuarios
+ALTER TABLE usuarios ADD COLUMN telefono VARCHAR(20) AFTER email;
 
--- TABLA: recursos
-CREATE TABLE recursos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    tipo VARCHAR(50),
-    descripcion TEXT,
-    estado ENUM('disponible', 'no disponible') DEFAULT 'disponible'
-);
-
--- TABLA: reservas
-CREATE TABLE reservas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    usuario_id INT NOT NULL,
-    recurso_id INT NOT NULL,
-    fecha DATE NOT NULL,
-    hora_inicio TIME NOT NULL,
-    hora_fin TIME NOT NULL,
-    estado ENUM('activa', 'cancelada') DEFAULT 'activa',
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-    FOREIGN KEY (recurso_id) REFERENCES recursos(id) ON DELETE CASCADE
-);
-
--- TABLA: disponibilidad
-CREATE TABLE disponibilidad (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    recurso_id INT NOT NULL,
-    fecha DATE NOT NULL,
-    hora_inicio TIME NOT NULL,
-    hora_fin TIME NOT NULL,
-    disponible BOOLEAN DEFAULT TRUE,
-    FOREIGN KEY (recurso_id) REFERENCES recursos(id) ON DELETE CASCADE
-);
-
--- TABLA: historial_reservas
-CREATE TABLE historial_reservas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    reserva_id INT NOT NULL,
-    usuario_id INT NOT NULL,
-    recurso_id INT NOT NULL,
-    fecha_reserva DATE NOT NULL,
-    hora_inicio TIME NOT NULL,
-    hora_fin TIME NOT NULL,
-    accion VARCHAR(50) NOT NULL,
-    FOREIGN KEY (reserva_id) REFERENCES reservas(id) ON DELETE CASCADE,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-    FOREIGN KEY (recurso_id) REFERENCES recursos(id) ON DELETE CASCADE
-);
-
+-- 2. Insertar los nuevos recursos
+INSERT INTO recursos (nombre, tipo, descripcion, estado) VALUES 
+('Datashow Epson X41', 'equipo', 'Proyector HD para presentaciones', 'disponible'),
+('Kit de Marcadores y Borrador', 'material', 'Set de 4 colores y borrador magnético', 'disponible'),
+('Reglas y Juego Geometría', 'material', 'Juego completo para pizarra', 'disponible'),
+('Aula 204 - Computo', 'laboratorio', 'Laboratorio con 20 PCs i7', 'disponible'),
+('Aula 101 - General', 'sala', 'Aula teórica capacidad 30 personas', 'disponible');

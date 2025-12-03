@@ -55,8 +55,17 @@
     <div class="col">
         <div class="card h-100 shadow-sm hover-effect">
             
-            <div class="card-img-top overflow-hidden" style="height: 200px;">
-                {% if recurso.tipo == 'sala' %}
+            <div class="card-img-top overflow-hidden" style="height: 200px; display:flex; align-items:center; justify-content:center; background-color:#f8f9fa;">
+                
+                {% if 'Datashow' in recurso.nombre or 'Proyector' in recurso.nombre %}
+                    <img src="{% static 'images/proyector.png' %}" class="img-fluid" style="max-height: 80%; width: auto;" alt="Proyector"
+                         onerror="this.src='https://cdn-icons-png.flaticon.com/512/2303/2303236.png'">
+                
+                {% elif 'Marcadores' in recurso.nombre or 'Reglas' in recurso.nombre or 'Borrador' in recurso.nombre %}
+                    <img src="{% static 'images/utiles.png' %}" class="img-fluid" style="max-height: 80%; width: auto;" alt="Materiales"
+                         onerror="this.src='https://cdn-icons-png.flaticon.com/512/1046/1046393.png'">
+
+                {% elif recurso.tipo == 'sala' %}
                     <img src="{% static 'images/' %}{% cycle 'salon.png' 'capacitacion.png' %}" 
                          class="w-100 h-100" style="object-fit: cover;" alt="Sala">
                 
