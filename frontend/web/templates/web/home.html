@@ -5,7 +5,7 @@
 
 {% block content %}
 
-<div id="mainCarousel" class="carousel slide mb-5 shadow rounded overflow-hidden" data-bs-ride="carousel">
+<div id="mainCarousel" class="carousel slide mb-5 shadow-lg rounded overflow-hidden" data-bs-ride="carousel">
     <div class="carousel-indicators">
         <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="0" class="active"></button>
         <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="1"></button>
@@ -13,27 +13,24 @@
     </div>
     <div class="carousel-inner">
         <div class="carousel-item active">
-            <img src="{% static 'images/instalacionesmodernas.jpg' %}" class="d-block w-100" alt="Instalaciones" 
-                 style="height: 400px; object-fit: cover;">
-            <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
-                <h3>Instalaciones Modernas</h3>
-                <p>Espacios diseñados para el aprendizaje y la innovación.</p>
+            <img src="{% static 'images/instalacionesmodernas.jpg' %}" class="d-block w-100" alt="Edificio" style="height: 500px; object-fit: cover;">
+            <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-75 rounded p-3">
+                <h2 class="fw-bold">Campus Central</h2>
+                <p class="fs-5">Instalaciones modernas para tu formación.</p>
             </div>
         </div>
         <div class="carousel-item">
-            <img src="{% static 'images/tpi.png' %}" class="d-block w-100" alt="Tecnología" 
-                 style="height: 400px; object-fit: cover;">
-            <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
-                <h3>Tecnología de Punta</h3>
-                <p>Laboratorios y equipos de alto rendimiento a tu disposición.</p>
+            <img src="{% static 'images/salon.png' %}" class="d-block w-100" alt="Aulas" style="height: 500px; object-fit: cover;">
+            <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-75 rounded p-3">
+                <h2 class="fw-bold">Aulas Equipadas</h2>
+                <p class="fs-5">Espacios cómodos y climatizados.</p>
             </div>
         </div>
         <div class="carousel-item">
-            <img src="{% static 'images/conferenciasA.png' %}" class="d-block w-100" alt="Eventos" 
-                 style="height: 400px; object-fit: cover;">
-            <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
-                <h3>Espacios para Eventos</h3>
-                <p>El lugar perfecto para tus conferencias y reuniones importantes.</p>
+            <img src="{% static 'images/laboratorio.png' %}" class="d-block w-100" alt="Laboratorios" style="height: 500px; object-fit: cover;">
+            <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-75 rounded p-3">
+                <h2 class="fw-bold">Laboratorios</h2>
+                <p class="fs-5">Tecnología de punta a tu alcance.</p>
             </div>
         </div>
     </div>
@@ -46,75 +43,106 @@
 </div>
 
 <div class="text-center mb-5">
-    <h2 class="fw-bold text-primary">Nuestros Recursos Disponibles</h2>
-    <p class="text-muted">Explora la variedad de equipos y espacios que ofrecemos</p>
+    <h2 class="fw-bold text-primary display-5">Catálogo de Recursos</h2>
+    <p class="text-muted fs-5">Explora nuestros equipos y espacios disponibles</p>
 </div>
 
 <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
     {% for recurso in recursos %}
     <div class="col">
-        <div class="card h-100 shadow-sm hover-effect">
+        <div class="card h-100 shadow-sm border-0 hover-card">
             
-            <div class="card-img-top overflow-hidden" style="height: 200px; display:flex; align-items:center; justify-content:center; background-color:#f8f9fa;">
+            <div id="carouselRecurso{{ recurso.id }}" class="carousel slide" data-bs-interval="false">
                 
-                {% if 'Datashow' in recurso.nombre or 'Proyector' in recurso.nombre %}
-                    <img src="{% static 'images/proyector.png' %}" class="img-fluid" style="max-height: 80%; width: auto;" alt="Proyector"
-                         onerror="this.src='https://cdn-icons-png.flaticon.com/512/2303/2303236.png'">
-                
-                {% elif 'Marcadores' in recurso.nombre or 'Reglas' in recurso.nombre or 'Borrador' in recurso.nombre %}
-                    <img src="{% static 'images/utiles.png' %}" class="img-fluid" style="max-height: 80%; width: auto;" alt="Materiales"
-                         onerror="this.src='https://cdn-icons-png.flaticon.com/512/1046/1046393.png'">
+                <div class="carousel-inner" style="height: 220px; background-color: #f8f9fa;">
+                    
+                    {% if 'Datashow' in recurso.nombre or 'Proyector' in recurso.nombre %}
+                        <div class="carousel-item active h-100">
+                            <img src="{% static 'images/datashow1.png' %}" class="d-block w-100 h-100" style="object-fit: contain; padding: 15px;" 
+                                 onerror="this.src='{% static 'images/tpi.png' %}'">
+                        </div>
+                        <div class="carousel-item h-100">
+                            <img src="{% static 'images/datashow2.png' %}" class="d-block w-100 h-100" style="object-fit: contain; padding: 15px;" 
+                                 onerror="this.src='{% static 'images/tpi.png' %}'">
+                        </div>
 
-                {% elif recurso.tipo == 'sala' %}
-                    <img src="{% static 'images/' %}{% cycle 'salon.png' 'capacitacion.png' %}" 
-                         class="w-100 h-100" style="object-fit: cover;" alt="Sala">
-                
-                {% elif recurso.tipo == 'auditorio' %}
-                    <img src="{% static 'images/' %}{% cycle 'auditoria.png' 'audotorio.png' 'conferenciasA.png' %}" 
-                         class="w-100 h-100" style="object-fit: cover;" alt="Auditorio">
-                
-                {% elif recurso.tipo == 'laboratorio' %}
-                    <img src="{% static 'images/laboratorio.png' %}" 
-                         class="w-100 h-100" style="object-fit: cover;" alt="Laboratorio">
-                
-                {% elif recurso.tipo == 'equipo' %}
-                    <img src="{% static 'images/' %}{% cycle 'tpi.png' 'capacitacion.png' %}" 
-                         class="w-100 h-100" style="object-fit: cover;" alt="Equipo">
-                
-                {% else %}
-                    <img src="{% static 'images/' %}{% cycle 'instalacionesmodernas.jpg' 'conferenciasA.png' %}" 
-                         class="w-100 h-100" style="object-fit: cover;" alt="Recurso">
-                {% endif %}
+                    {% elif 'Marcadores' in recurso.nombre or 'Reglas' in recurso.nombre %}
+                        <div class="carousel-item active h-100">
+                            <img src="{% static 'images/utiles1.png' %}" class="d-block w-100 h-100" style="object-fit: contain; padding: 15px;" 
+                                 onerror="this.src='{% static 'images/capacitacion.png' %}'">
+                        </div>
+                        <div class="carousel-item h-100">
+                            <img src="{% static 'images/utiles2.png' %}" class="d-block w-100 h-100" style="object-fit: contain; padding: 15px;" 
+                                 onerror="this.src='{% static 'images/capacitacion.png' %}'">
+                        </div>
+
+                    {% elif recurso.tipo == 'sala' %}
+                        <div class="carousel-item active h-100">
+                            <img src="{% static 'images/aula1.png' %}" class="d-block w-100 h-100" style="object-fit: cover;"
+                                 onerror="this.src='{% static 'images/salon.png' %}'">
+                        </div>
+                        <div class="carousel-item h-100">
+                            <img src="{% static 'images/aula2.png' %}" class="d-block w-100 h-100" style="object-fit: cover;"
+                                 onerror="this.src='{% static 'images/salon.png' %}'">
+                        </div>
+                        <div class="carousel-item h-100">
+                            <img src="{% static 'images/aula3.png' %}" class="d-block w-100 h-100" style="object-fit: cover;"
+                                 onerror="this.src='{% static 'images/salon.png' %}'">
+                        </div>
+
+                    {% elif recurso.tipo == 'laboratorio' %}
+                        <div class="carousel-item active h-100">
+                            <img src="{% static 'images/laboratorio.png' %}" class="d-block w-100 h-100" style="object-fit: cover;">
+                        </div>
+                        {% else %}
+                        <div class="carousel-item active h-100">
+                            <img src="{% static 'images/conferenciasA.png' %}" class="d-block w-100 h-100" style="object-fit: cover;">
+                        </div>
+                    {% endif %}
+                </div>
+
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselRecurso{{ recurso.id }}" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" style="filter: invert(1) grayscale(100%);"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselRecurso{{ recurso.id }}" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" style="filter: invert(1) grayscale(100%);"></span>
+                </button>
             </div>
-
-            <div class="card-body text-center">
-                <h5 class="card-title fw-bold">{{ recurso.nombre }}</h5>
-                <p class="card-text text-muted">{{ recurso.descripcion|default:"Recurso disponible para reserva." }}</p>
-                <span class="badge bg-secondary mb-3">{{ recurso.tipo|upper }}</span>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title fw-bold text-dark mb-0">{{ recurso.nombre }}</h5>
+                    <span class="badge bg-primary rounded-pill">{{ recurso.tipo|upper }}</span>
+                </div>
+                <p class="card-text text-muted small">{{ recurso.descripcion|default:"Disponible para reserva inmediata." }}</p>
             </div>
             
             {% if request.session.user %}
-            <div class="card-footer bg-white border-top-0 text-center pb-3">
-                <a href="{% url 'nueva_reserva' %}?recurso={{ recurso.id }}" class="btn btn-outline-primary rounded-pill px-4">Reservar Ahora</a>
+            <div class="card-footer bg-white border-top-0 pb-4 pt-0">
+                <a href="{% url 'nueva_reserva' %}?recurso={{ recurso.id }}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">
+                    Reservar
+                </a>
             </div>
             {% endif %}
         </div>
-    </div>
-    {% empty %}
-    <div class="col-12 text-center">
-        <div class="alert alert-warning">No hay recursos para mostrar en este momento.</div>
     </div>
     {% endfor %}
 </div>
 
 <style>
 /* Efecto hover suave para las tarjetas */
-.hover-effect {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+.hover-card { 
+    transition: transform 0.3s ease, box-shadow 0.3s ease; 
 }
-.hover-effect:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+.hover-card:hover { 
+    transform: translateY(-5px); 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; 
+}
+
+/* Flechas de los mini-carruseles más visibles */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    width: 1.5rem;
+    height: 1.5rem;
 }
 </style>
 {% endblock %}

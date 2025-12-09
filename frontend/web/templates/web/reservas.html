@@ -4,46 +4,68 @@
 
 {% block content %}
 <div class="fade-in">
-    <div class="card">
-        <div class="d-flex justify-between align-center mb-3">
+    <div class="card shadow-sm border-0">
+        <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="card-title">Mis Reservas</h2>
-                <p class="card-subtitle">Gestiona tus reservas activas</p>
+                <h2 class="card-title fw-bold text-primary">Mis Reservas</h2>
+                <p class="card-subtitle text-muted">Gestiona tus reservas activas</p>
             </div>
-            <a href="{% url 'nueva_reserva' %}" class="btn btn-success">Nueva Reserva</a>
+            <a href="{% url 'nueva_reserva' %}" class="btn btn-success rounded-pill px-4">
+                <i class="fas fa-plus"></i> Nueva Reserva
+            </a>
         </div>
         
         {% if reservas %}
             <div class="table-responsive">
-                <table class="table">
-                    <thead>
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
                         <tr>
-                            <th>ID</th>
                             <th>Recurso</th>
-                            <th>Fecha</th>
+                            <th>Fecha y Hora</th>
                             <th>Estado</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for reserva in reservas %}
                         <tr>
-                            <td>#{{ reserva.id }}</td>
                             <td>
-                                <div class="d-flex align-center gap-2">
-                                    <span class="resource-icon-small">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="fs-4">
                                         {% if reserva.recurso_tipo == 'sala' %}🏢
                                         {% elif reserva.recurso_tipo == 'equipo' %}💻
-                                        {% elif reserva.recurso_tipo == 'laboratorio' %}🔬
+                                        {% elif reserva.recurso_tipo == 'material' %}📏
                                         {% else %}📦{% endif %}
                                     </span>
-                                    {{ reserva.recurso_nombre }}
+                                    <div>
+                                        <div class="fw-bold">{{ reserva.recurso_nombre }}</div>
+                                        <small class="text-muted">{{ reserva.recurso_tipo|title }}</small>
+                                    </div>
                                 </div>
                             </td>
-                            <td>{{ reserva.fecha }}</td>
                             <td>
-                                <span class="badge {% if reserva.estado == 'activa' %}badge-success{% else %}badge-danger{% endif %}">
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold">{{ reserva.fecha }}</span>
+                                    <small class="text-muted">{{ reserva.hora_inicio }} - {{ reserva.hora_fin }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge {% if reserva.estado == 'activa' %}bg-success{% else %}bg-danger{% endif %} rounded-pill">
                                     {{ reserva.estado|title }}
                                 </span>
+                            </td>
+                            <td>
+                                {% if reserva.estado == 'activa' %}
+                                    <button class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal" data-bs-target="#modalPosponer{{ reserva.id }}">
+                                        📅 Posponer
+                                    </button>
+                                    
+                                    <a href="{% url 'cancelar_reserva' reserva.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Estás seguro de cancelar esta reserva?')">
+                                        ❌ Cancelar
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
@@ -51,44 +73,57 @@
                 </table>
             </div>
         {% else %}
-            <div class="text-center p-4">
+            <div class="text-center p-5 bg-light rounded-3">
                 <div class="mb-3" style="font-size: 4rem;">📋</div>
-                <h3 class="mb-2">No tienes reservas activas</h3>
-                <p class="text-light mb-3">Comienza reservando un recurso para tu próxima actividad</p>
-                <a href="{% url 'nueva_reserva' %}" class="btn btn-success">Hacer mi primera reserva</a>
+                <h3 class="fw-bold">No tienes reservas activas</h3>
+                <p class="text-muted">¡Reserva un recurso ahora mismo!</p>
+                <a href="{% url 'nueva_reserva' %}" class="btn btn-primary rounded-pill px-4">Hacer Reserva</a>
             </div>
         {% endif %}
     </div>
 </div>
 
-<style>
-/* Estilos específicos para reservas */
-.table-responsive {
-    overflow-x: auto;
-}
+{% for reserva in reservas %}
+    {% if reserva.estado == 'activa' %}
+    <div class="modal fade" id="modalPosponer{{ reserva.id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning bg-opacity-10">
+                    <h5 class="modal-title fw-bold text-dark">Posponer Reserva #{{ reserva.id }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <form action="{% url 'posponer_reserva' reserva.id %}" method="post">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <p class="text-muted mb-3">Selecciona el nuevo horario para tu reserva de <strong>{{ reserva.recurso_nombre }}</strong>:</p>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nueva Fecha</label>
+                            <input type="date" name="fecha" class="form-control" required value="{{ reserva.fecha|date:'Y-m-d' }}">
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col">
+                                <label class="form-label fw-bold">Inicio</label>
+                                <input type="time" name="hora_inicio" class="form-control" required value="{{ reserva.hora_inicio|time:'H:i' }}">
+                            </div>
+                            <div class="col">
+                                <label class="form-label fw-bold">Fin</label>
+                                <input type="time" name="hora_fin" class="form-control" required value="{{ reserva.hora_fin|time:'H:i' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="submit" class="btn btn-warning fw-bold">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
 
-.resource-icon-small {
-    font-size: 1.2rem;
-}
-
-/* Estado vacío mejorado */
-.text-center.p-4 {
-    background: var(--light-color);
-    border-radius: 12px;
-    margin: 2rem 0;
-}
-
-/* Responsive para tabla de reservas */
-@media (max-width: 768px) {
-    .table-responsive {
-        font-size: 0.875rem;
-    }
-    
-    .d-flex.justify-between {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
-    }
-}
-</style>
 {% endblock %}

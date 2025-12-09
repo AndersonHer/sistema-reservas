@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="auth-container">
-    <div class="auth-card">
+    <div class="auth-card fade-in">
         <div class="auth-header text-center mb-4">
             <div class="auth-icon">👤</div>
             <h1 class="card-title">Crear Cuenta</h1>
@@ -26,31 +26,29 @@
                 <input type="text" id="nombre" name="nombre" class="form-control" 
                        value="{{ form_data.nombre }}" placeholder="Ej: Juan Pérez" required
                        oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')">
-                <small class="text-light" style="color: #95a5a6;">Solo letras y espacios</small>
+                <small class="text-muted" style="font-size: 0.8rem;">Solo letras y espacios</small>
             </div>
 
             <div class="form-group">
                 <label for="email" class="form-label">Correo Electrónico</label>
                 <input type="email" id="email" name="email" class="form-control" 
                        value="{{ form_data.email }}" placeholder="usuario@institucion.edu" required>
-                <small class="text-light">Usa tu correo institucional</small>
             </div>
 
             <div class="form-group">
                 <label for="telefono" class="form-label">Teléfono</label>
-                <input type="text" id="telefono" name="telefono" class="form-control" 
+                <input type="tel" id="telefono" name="telefono" class="form-control" 
                        value="{{ form_data.telefono }}" placeholder="Ej: 99887766" required maxlength="8"
                        oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                <small class="text-light" style="color: #95a5a6;">Solo números (8 dígitos)</small>
+                <small class="text-muted" style="font-size: 0.8rem;">Solo números (8 dígitos)</small>
             </div>
 
             <div class="form-group">
                 <label for="rol" class="form-label">Rol</label>
                 <select id="rol" name="rol" class="form-select" required>
-                    <option value="estudiante" {% if form_data.rol == 'estudiante' %}selected{% endif %}>Estudiante</option>
-                    <option value="profesor" {% if form_data.rol == 'profesor' %}selected{% endif %}>Profesor</option>
-                    <option value="administrativo" {% if form_data.rol == 'administrativo' %}selected{% endif %}>Personal Administrativo</option>
-                    <option value="admin" {% if form_data.rol == 'admin' %}selected{% endif %}>Administrador</option>
+                    <option value="estudiante">Estudiante</option>
+                    <option value="docente">Docente</option>
+                    <option value="administrativo">Administrativo</option>
                 </select>
             </div>
 
@@ -80,62 +78,13 @@
 </div>
 
 <style>
-/* Estilos específicos para registro */
-.auth-container {
-    min-height: 80vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    background: linear-gradient(135deg, var(--primary-color), var(--dark-color));
+/* Animación de entrada suave */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
 }
-
-.auth-card {
-    background: white;
-    padding: 3rem;
-    border-radius: 16px;
-    box-shadow: var(--shadow-hover);
-    width: 100%;
-    max-width: 440px;
-}
-
-.auth-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-}
-
-.auth-footer {
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--border-color);
-}
-
-.auth-link {
-    color: var(--secondary-color);
-    text-decoration: none;
-    font-weight: 500;
-    margin-left: 0.5rem;
-}
-
-.auth-link:hover {
-    text-decoration: underline;
-}
-
-.text-light {
-    color: var(--text-light);
-    font-size: 0.875rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .auth-container {
-        padding: 1rem;
-        background: var(--light-color);
-    }
-    
-    .auth-card {
-        padding: 2rem;
-        box-shadow: var(--shadow);
-    }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>
 {% endblock %}
